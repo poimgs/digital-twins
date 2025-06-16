@@ -39,7 +39,7 @@ colorama==0.4.6
 psutil==5.9.8
 
 # Security
-cryptography==42.0.2
+cryptography==44.0.1
 
 # Additional dependencies that may be needed
 typing-extensions==4.9.0
