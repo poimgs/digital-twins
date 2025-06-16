@@ -10,7 +10,7 @@ python-dotenv==1.0.1
 
 # HTTP requests
 httpx==0.26.0
-requests==2.31.0
+requests==2.32.4
 
 # Optional: Web framework for health endpoints
 fastapi==0.109.2
