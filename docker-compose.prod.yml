@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  digital-twin-bot:
+    build: .
+    container_name: digital_twin_bot_prod
+    restart: unless-stopped
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_DB_PASSWORD=${SUPABASE_DB_PASSWORD}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENVIRONMENT=production
+      - STORY_HISTORY_DAYS=${STORY_HISTORY_DAYS:-7}
+      - MAX_CONVERSATION_HISTORY=${MAX_CONVERSATION_HISTORY:-20}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - bot-network
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import sys; sys.path.append('src'); from src.database import PostgreSQLClient; exit(0)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  bot-network:
+    driver: bridge

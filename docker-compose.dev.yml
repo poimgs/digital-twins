@@ -1,0 +1,89 @@
+version: "3.8"
+
+services:
+  # PostgreSQL database for local development
+  postgres:
+    image: postgres:15-alpine
+    container_name: digital_twin_db
+    environment:
+      POSTGRES_DB: digital_twin_bot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/seed.sql
+    networks:
+      - bot-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Multi-Bot Manager for development
+  digital-twin-bots-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: digital_twin_bots_dev
+    restart: unless-stopped
+    environment:
+      # Database
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/digital_twin_bot
+
+      # OpenAI
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
+
+      # Individual Bot Tokens (add as many as you have twins)
+      - BOT_TOKEN_ALICE_CHEN=${BOT_TOKEN_ALICE_CHEN}
+      - BOT_USERNAME_ALICE_CHEN=${BOT_USERNAME_ALICE_CHEN:-alice_chen_bot}
+
+      - BOT_TOKEN_BOB_MARTINEZ=${BOT_TOKEN_BOB_MARTINEZ}
+      - BOT_USERNAME_BOB_MARTINEZ=${BOT_USERNAME_BOB_MARTINEZ:-bob_martinez_bot}
+
+      - BOT_TOKEN_SARAH_KIM=${BOT_TOKEN_SARAH_KIM}
+      - BOT_USERNAME_SARAH_KIM=${BOT_USERNAME_SARAH_KIM:-sarah_kim_bot}
+
+      # Configuration
+      - ENVIRONMENT=development
+      - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
+      - STORY_HISTORY_DAYS=${STORY_HISTORY_DAYS:-7}
+      - MAX_CONVERSATION_HISTORY=${MAX_CONVERSATION_HISTORY:-20}
+    volumes:
+      - ./src:/app/src # Mount source for hot reload
+      - ./logs:/app/logs
+    networks:
+      - bot-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000" # For potential FastAPI endpoints
+
+  # pgAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: digital_twin_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "8080:80"
+    networks:
+      - bot-network
+    depends_on:
+      - postgres
+    profiles:
+      - tools # Optional service
+
+volumes:
+  postgres_data:
+
+networks:
+  bot-network:
+    driver: bridge

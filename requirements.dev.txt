@@ -1,0 +1,21 @@
+# Hot reload and development tools
+watchdog==3.0.0
+python-decouple==3.8
+
+# PostgreSQL adapter
+psycopg2-binary==2.9.9
+
+# Database migrations (optional)
+alembic==1.13.1
+
+# Testing with database
+pytest-postgresql==5.0.0
+factory-boy==3.3.0
+
+# Code quality
+pre-commit==3.6.0
+isort==5.13.2
+
+# Debugging
+ipdb==0.13.13
+rich==13.7.0
